@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>AMA Produktmanager</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand-block">
+      <img id="sidebarLogo" class="brand-logo" hidden alt="Unternehmenslogo">
+      <div><strong id="brandName">AMA Produktmanager</strong><span id="brandSubtitle">EAN · Lager · eBay</span></div>
+      <button class="icon-btn sidebar-close" id="sidebarClose" aria-label="Menü schließen">×</button>
+    </div>
+    <nav>
+      <button class="nav-item active" data-page="dashboard"><span>⌂</span>Startseite</button>
+      <button class="nav-item" data-page="products"><span>▦</span>Produkte</button>
+      <button class="nav-item" data-action="new"><span>＋</span>Neues Produkt</button>
+      <button class="nav-item" data-page="import"><span>⇩</span>Import</button>
+      <button class="nav-item" data-page="settings"><span>⚙</span>Einstellungen</button>
+    </nav>
+    <div class="sidebar-foot"><span id="healthDot"></span><small id="health">Server wird geprüft …</small></div>
+  </aside>
+
+  <div class="content-shell">
+    <header class="topbar">
+      <button class="hamburger" id="menuBtn" aria-label="Navigation öffnen"><span></span><span></span><span></span></button>
+      <div class="top-title"><strong id="pageTitle">Startseite</strong><small id="pageSubtitle">Übersicht Ihrer Produktdatenbank</small></div>
+      <button class="primary-btn" id="quickNew">+ Neues Produkt</button>
+    </header>
+
+    <main>
+      <section class="page active" id="page-dashboard">
+        <div class="hero-card">
+          <div><p class="eyebrow">PRODUKTVERWALTUNG</p><h1>Willkommen im <span id="heroCompany">AMA Produktmanager</span></h1><p>Produkte scannen, Daten prüfen, speichern und für eBay vorbereiten.</p></div>
+          <button class="primary-btn large" data-action="new">Produkt erfassen</button>
+        </div>
+        <div class="stats-grid" id="statsGrid"></div>
+        <div class="dashboard-grid">
+          <section class="panel"><div class="panel-head"><div><h2>Kategorien</h2><p>Verteilung Ihrer gespeicherten Produkte</p></div></div><div id="categoryStats" class="category-list"></div></section>
+          <section class="panel"><div class="panel-head"><div><h2>Zuletzt hinzugefügt</h2><p>Ihre neuesten Datensätze</p></div><button class="text-btn" data-page="products">Alle anzeigen</button></div><div id="recentProducts" class="recent-list"></div></section>
+        </div>
+      </section>
+
+      <section class="page" id="page-products">
+        <section class="panel products-panel">
+          <div class="panel-head responsive-head"><div><h1>Produktdatenbank</h1><p>Alle Produkte durchsuchen, filtern und bearbeiten.</p></div><button class="primary-btn" data-action="new">+ Produkt</button></div>
+          <div class="filterbar">
+            <input id="search" placeholder="Name, EAN, Artikelnummer oder SKU">
+            <select id="categoryFilter"><option value="">Alle Kategorien</option></select>
+            <select id="statusFilter"><option value="">Alle Status</option><option>Entwurf</option><option>Prüfung erforderlich</option><option>Freigegeben</option><option>Veröffentlicht</option><option>Verkauft</option><option>Archiviert</option></select>
+            <button id="searchBtn">Suchen</button>
+          </div>
+          <div class="table-wrap">
+            <table class="products-table"><thead><tr><th>Produkt</th><th>Nummer</th><th>Kategorie</th><th>Bestand</th><th>Preis</th><th>Status</th><th>Aktionen</th></tr></thead><tbody id="productRows"></tbody></table>
+          </div>
+          <div class="mobile-product-list" id="mobileProducts"></div>
+        </section>
+      </section>
+
+      <section class="page" id="page-editor">
+        <form id="form" class="panel editor-panel">
+          <input type="hidden" id="id"><input type="hidden" id="external_image_url">
+          <div class="panel-head responsive-head"><div><button type="button" class="back-btn" id="backBtn">← Zurück</button><h1 id="formTitle">Neues Produkt</h1><p id="formMeta">Produktdaten erfassen und prüfen</p></div><div class="head-actions"><button type="button" class="danger-btn" id="deleteBtn" hidden>Löschen</button><button type="submit" class="primary-btn">Speichern</button></div></div>
+          <div class="form-section highlight-section">
+            <h2>Produkt erkennen</h2>
+            <div class="scan-row"><label>EAN / GTIN<input id="ean" inputmode="numeric" autocomplete="off"></label><button type="button" id="scanBtn">Kamera</button><button type="button" id="lookupBtn">Daten abrufen</button></div>
+            <small id="eanHelp">Barcode scannen oder Nummer manuell eingeben.</small>
+            <div id="externalImageWrap" class="external-image" hidden><img id="externalImage" alt="Externes Produktbild"><div><strong>Bild aus Produktdatenquelle</strong><small>Wird als Vorschau gespeichert. Eigene Bilder können nach dem Speichern hochgeladen werden.</small></div></div>
+          </div>
+          <div class="form-section"><h2>Grunddaten</h2><div class="form-grid">
+            <label class="span-2">Produktname *<input id="name" required></label><label>Produktnummer<input id="product_number"></label>
+            <label>Marke<input id="brand"></label><label>Hersteller<input id="manufacturer"></label><label>Kategorie<input id="category" list="categoryOptions"><datalist id="categoryOptions"></datalist></label>
+            <label>Zustand<select id="condition"><option>Neu</option><option>Gebraucht</option><option>Generalüberholt</option><option>Defekt / Ersatzteil</option></select></label><label>Farbe<input id="color"></label><label>Größe<input id="size"></label><label>Material<input id="material"></label>
+            <label>Menge<input id="quantity" type="number" min="0" value="1"></label><label>Einkaufspreis €<input id="purchase_price" type="number" step="0.01" min="0"></label><label>Verkaufspreis €<input id="price" type="number" step="0.01" min="0"></label><label>Lagerort<input id="location"></label><label>Status<select id="status"><option>Entwurf</option><option>Prüfung erforderlich</option><option>Freigegeben</option><option>Veröffentlicht</option><option>Verkauft</option><option>Archiviert</option></select></label>
+          </div></div>
+          <div class="form-section"><h2>Technische Angaben</h2><div class="form-grid"><label class="span-3">OE-/OEM-Nummern<textarea id="oem_numbers"></textarea></label><label class="span-3">Technische Daten<textarea id="technical_data"></textarea></label><label class="span-3">Kompatibilität<textarea id="compatibility"></textarea></label><label class="span-3">Zustandsbeschreibung<textarea id="condition_description"></textarea></label></div></div>
+          <div class="form-section"><h2>eBay-Inhalt</h2><div class="form-grid"><label>eBay-Kategorie-ID<input id="ebay_category_id" placeholder="z. B. 33559"><small>Wird später über eBay Taxonomy unterstützt.</small></label><label>eBay-Titel<input id="ebay_title" maxlength="80"><small><span id="titleCount">0</span>/80 Zeichen</small></label></div><label>Beschreibung (visuell editierbar)</label><div class="editor-toolbar"><button type="button" data-cmd="bold"><b>B</b></button><button type="button" data-cmd="italic"><i>I</i></button><button type="button" data-cmd="insertUnorderedList">Liste</button><button type="button" data-cmd="formatBlock" data-value="h3">Überschrift</button></div><div id="descriptionEditor" class="rich-editor" contenteditable="true"></div><textarea id="description" hidden></textarea></div>
+          <div id="afterSave" class="form-section" hidden><div class="panel-head"><div><h2>Bilder, PDF und Export</h2><p>Produktbilder verwalten und Daten ausgeben.</p></div></div><div class="upload-box"><input id="images" type="file" multiple accept="image/jpeg,image/png,image/webp"><button type="button" id="uploadBtn">Bilder hochladen</button></div><div id="imageList" class="image-grid"></div><div class="export-actions"><button type="button" id="previewBtn">Beschreibung ansehen</button><a id="pdfLink" class="button-link" target="_blank">PDF herunterladen</a><button type="button" id="printBtn">Drucken</button><a id="csvLink" class="button-link">CSV exportieren</a><button type="button" id="ebayBtn">eBay-Daten prüfen</button><button type="button" id="ebayPublishBtn" class="primary-btn">Bei eBay veröffentlichen</button></div><pre id="ebayOutput" hidden></pre></div>
+        </form>
+      </section>
+
+      <section class="page" id="page-import"><section class="panel"><div class="panel-head"><div><h1>Daten importieren</h1><p>CSV-Dateien kontrolliert in die Produktdatenbank übernehmen.</p></div></div><div class="notice"><strong>Unterstützte Spalten:</strong> produktname/name, ean/gtin, artikelnummer/product_number, marke/brand, hersteller, kategorie, menge, verkaufspreis, einkaufspreis, lagerort und status.</div><div class="import-box"><input type="file" id="csvFile" accept=".csv,text/csv"><button id="importBtn">CSV prüfen und importieren</button><p id="importResult"></p></div></section></section>
+
+      <section class="page" id="page-settings"><form id="settingsForm" class="panel"><div class="panel-head responsive-head"><div><h1>Einstellungen</h1><p>Unternehmensauftritt, Logo und PDF-Daten festlegen.</p></div><button class="primary-btn" type="submit">Einstellungen speichern</button></div><div class="settings-layout"><div class="logo-card"><div class="logo-preview"><img id="settingsLogo" hidden alt="Logo"><span id="logoPlaceholder">LOGO</span></div><input id="logoFile" type="file" accept="image/png,image/jpeg,image/webp"><button type="button" id="logoUploadBtn">Unternehmenslogo hochladen</button><small>Empfohlen: PNG mit transparentem Hintergrund.</small></div><div class="form-grid"><label>Firmenname<input id="company_name"></label><label>Untertitel<input id="company_subtitle"></label><label class="span-2">Adresse<input id="company_address"></label><label>Telefon<input id="company_phone"></label><label>E-Mail<input id="company_email" type="email"></label><label>Website<input id="company_website"></label><label>Hauptfarbe<input id="primary_color" type="color"></label><label class="span-2">PDF-Fußzeile<textarea id="pdf_footer"></textarea></label><label class="span-2">Produktdatenquellen / API-URLs<textarea id="product_api_urls" rows="5" placeholder="Eine URL pro Zeile, {ean} wird durch den Barcode ersetzt"></textarea><small>Mehrere Quellen sind möglich. Das Programm prüft sie nacheinander.</small></label></div></div><hr class="settings-separator"><div class="panel-head"><div><h2>Datensicherung</h2><p>Produkte, Einstellungen, Logo und lokale Bilder sichern oder wiederherstellen.</p></div></div><div class="backup-card"><a class="button-link" href="/api/backup">Vollständiges Backup herunterladen</a><div class="backup-restore"><input id="backupFile" type="file" accept="application/json,.json"><button type="button" id="restoreBackupBtn">Backup wiederherstellen</button></div><small>Vor einer Wiederherstellung wird eine aktuelle Sicherung empfohlen. eBay-Tokens werden aus Sicherheitsgründen nicht importiert.</small></div><hr class="settings-separator"><div class="panel-head"><div><h2>eBay-Verbindung</h2><p>Zugangsdaten werden morgen nur lokal in der .env-Datei ergänzt.</p></div><span id="ebayStatusBadge" class="status-pill">Nicht verbunden</span></div><div class="notice"><strong>Sicherheitsregel:</strong> Client Secret und Token niemals hier eingeben oder im Browser speichern. Sie gehören ausschließlich in die lokale .env-Datei.</div><div class="form-grid"><label>Marktplatz<select id="ebay_marketplace_id"><option value="EBAY_DE">eBay Deutschland</option></select></label><label>Lagerstandort-Schlüssel<input id="ebay_merchant_location_key" placeholder="z. B. AMA_DOBERLUG"></label><label>Versandrichtlinie-ID<input id="ebay_fulfillment_policy_id"></label><label>Zahlungsrichtlinie-ID<input id="ebay_payment_policy_id"></label><label>Rückgaberichtlinie-ID<input id="ebay_return_policy_id"></label><label>Standard-Kategorie-ID<input id="ebay_default_category_id"></label><label>Lagername<input id="ebay_location_name" placeholder="AMA Lager Doberlug-Kirchhain"></label><label>Straße und Hausnummer<input id="ebay_location_address"></label><label>Postleitzahl<input id="ebay_location_postal_code"></label><label>Ort<input id="ebay_location_city"></label><label>Land<input id="ebay_location_country" value="DE" maxlength="2"></label></div><div class="export-actions"><button type="button" id="ebayConnectBtn" class="primary-btn">Mit eBay verbinden</button><button type="button" id="ebayOptInBtn">Business Policies aktivieren</button><button type="button" id="ebayCreatePoliciesBtn">Standardrichtlinien erstellen</button><button type="button" id="ebayPoliciesBtn">Richtlinien abrufen</button><button type="button" id="ebayCreateLocationBtn">Lagerstandort erstellen</button><button type="button" id="ebayDisconnectBtn" class="danger-btn">Verbindung trennen</button></div><div class="notice"><strong>Testwerte:</strong> Standardversand mit DHL Paket 6,99 €, 2 Werktage Bearbeitungszeit und 30 Tage Rückgabe. Bitte vor dem Produktionsbetrieb prüfen und anpassen.</div><pre id="ebaySettingsOutput" hidden></pre></form></section>
+    </main>
+  </div>
+</div>
+<div class="overlay" id="overlay"></div>
+<dialog id="scanner"><div class="dialog-head"><strong>Barcode scannen</strong><button id="closeScan">×</button></div><div id="reader"></div><p id="scanStatus">Kamera wird gestartet …</p></dialog>
+<dialog id="preview"><div class="dialog-head"><strong>Beschreibungsvorschau</strong><button id="closePreview">×</button></div><iframe id="previewFrame"></iframe></dialog>
+<div id="toast"></div>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="/app.js"></script>
+</body></html>
