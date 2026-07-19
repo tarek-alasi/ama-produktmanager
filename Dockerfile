@@ -2,17 +2,21 @@ FROM node:22-bookworm-slim
 
 WORKDIR /app
 
-ENV NODE_ENV=production
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+       python3 \
+       make \
+       g++ \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
+
+# Stabile npm-Version verwenden und npm ci umgehen
+RUN npm install --global npm@10.8.2 \
+    && npm install --omit=dev --no-audit --no-fund
 
 COPY . .
 
-RUN mkdir -p /app/storage/uploads /app/storage/branding /data/uploads /data/branding     && chown -R node:node /app /data
+ENV NODE_ENV=production
 
-USER node
-
-EXPOSE 3000
-
-CMD ["npm", "start"]
+CMD ["node", "src/server.js"]
