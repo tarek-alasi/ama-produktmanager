@@ -12,7 +12,7 @@ const { lookupExternalProduct } = require('./productProvider');
 const { credentialsConfigured, envName, makeState, buildAuthUrl, encrypt, decrypt, exchangeCode, refreshToken, buildInventoryPayload, buildOfferPayload, validateForEbay, ebayFetch } = require('./ebay');
 
 const app = express();
-const port = Number(process.env.PORT || 3000);
+const port = Number(process.env.PORT || 9999);;
 const storageRoot = path.resolve(process.env.STORAGE_ROOT || './storage');
 const uploadDir = path.join(storageRoot, 'uploads');
 const brandDir = path.join(storageRoot, 'branding');
@@ -350,4 +350,6 @@ function normalize(input){const p={ean:cleanDigits(input.ean||''),product_number
 function text(v){return String(v??'').trim();} function positive(v){const n=Number(v||0);return Number.isFinite(n)&&n>=0?n:0;}
 function parseCsv(text){const rows=[];let row=[],cell='',quoted=false;for(let i=0;i<text.length;i++){const c=text[i],n=text[i+1];if(c==='"'&&quoted&&n==='"'){cell+='"';i++;}else if(c==='"'){quoted=!quoted;}else if((c===','||c===';')&&!quoted){row.push(cell);cell='';}else if((c==='\n'||c==='\r')&&!quoted){if(c==='\r'&&n==='\n')i++;row.push(cell);cell='';if(row.some(v=>v.trim()!==''))rows.push(row);row=[];}else cell+=c;}row.push(cell);if(row.some(v=>v.trim()!==''))rows.push(row);return rows;}
 app.use((error,_req,res,_next)=>{console.error(error);res.status(error.code==='LIMIT_FILE_SIZE'?413:500).json({error:error.message||'Serverfehler'});});
-app.listen(port,'0.0.0.0',()=>console.log(`AMA Produktmanager V5: http://localhost:${port}`));
+app.listen(port, '0.0.0.0', () =>
+  console.log(`AMA Produktmanager V5 läuft auf 0.0.0.0:${port}`)
+);

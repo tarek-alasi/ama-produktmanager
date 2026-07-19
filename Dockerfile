@@ -19,4 +19,8 @@ COPY . .
 
 ENV NODE_ENV=production
 
+ENV PORT=9999
+
+EXPOSE 9999
+
 CMD ["node", "src/server.js"]
