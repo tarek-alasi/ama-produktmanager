@@ -1,18 +1,17 @@
 {
   "name": "ama-produktmanager",
-  "version": "5.0.0",
+  "version": "5.1.0",
   "private": true,
-  "description": "Responsive Produktverwaltung mit bereinigten Kategorien, direktem Löschen, Kamera-Fix, Backup, mehreren Produkt-APIs, SQLite, PDF und vorbereiteter eBay-Anbindung",
+  "description": "AMA Produktmanager mit Docker-Deployment, SQLite, Produktdatenquellen, PDF und eBay-Anbindung",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js"
   },
   "engines": {
-    "node": ">=22.5"
+    "node": ">=22.5 <23"
   },
   "dependencies": {
-    "better-sqlite3": "^12.11.1",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "helmet": "^8.0.0",

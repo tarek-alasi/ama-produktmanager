@@ -13,7 +13,7 @@ const { credentialsConfigured, envName, makeState, buildAuthUrl, encrypt, decryp
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
-const storageRoot = path.resolve('./storage');
+const storageRoot = path.resolve(process.env.STORAGE_ROOT || './storage');
 const uploadDir = path.join(storageRoot, 'uploads');
 const brandDir = path.join(storageRoot, 'branding');
 fs.mkdirSync(uploadDir, { recursive: true });

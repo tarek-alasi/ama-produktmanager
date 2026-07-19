@@ -2,7 +2,8 @@ const { DatabaseSync } = require('node:sqlite');
 const path = require('path');
 const fs = require('fs');
 
-const dbPath = path.resolve(process.env.DATABASE_PATH || './storage/ama-produkte.sqlite');
+const storageRoot = path.resolve(process.env.STORAGE_ROOT || './storage');
+const dbPath = path.resolve(process.env.DATABASE_PATH || path.join(storageRoot, 'ama-produkte.sqlite'));
 fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 const db = new DatabaseSync(dbPath);
 db.exec('PRAGMA journal_mode = WAL;');

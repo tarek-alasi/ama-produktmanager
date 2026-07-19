@@ -42,3 +42,8 @@ Unter **Einstellungen → eBay-Verbindung** stehen jetzt zusätzliche Schaltflä
 4. Lagerstandort erstellen
 
 Die Test-Standardrichtlinien verwenden DHL Paket mit 6,99 EUR Versand, zwei Tagen Bearbeitungszeit und 30 Tagen Rückgabe. Prüfen und ändern Sie diese Werte vor einem echten Production-Einsatz.
+
+
+## PandaStack / Docker
+
+Für PandaStack ist eine Dockerfile enthalten. Details stehen in `PANDASTACK-ANLEITUNG.md`.
