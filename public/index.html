@@ -21,7 +21,14 @@
       <button class="nav-item" data-page="import"><span>⇩</span>Import</button>
       <button class="nav-item" data-page="settings"><span>⚙</span>Einstellungen</button>
     </nav>
-    <div class="sidebar-foot"><span id="healthDot"></span><small id="health">Server wird geprüft …</small></div>
+    <div class="sidebar-foot">
+      <div class="user-session">
+        <div class="user-avatar" id="userAvatar">A</div>
+        <div class="user-details"><strong id="currentUserName">Administrator</strong><small id="currentUserEmail"></small></div>
+        <button class="logout-btn" id="logoutBtn" type="button" title="Abmelden">Abmelden</button>
+      </div>
+      <div class="health-row"><span id="healthDot"></span><small id="health">Server wird geprüft …</small></div>
+    </div>
   </aside>
 
   <div class="content-shell">
