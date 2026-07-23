@@ -7,15 +7,18 @@ const PDFDocument = require('pdfkit');
 const path = require('path');
 const fs = require('fs');
 const db = require('./db');
+const { COOKIE_NAME, initializeAdmin, createSession, getSessionUser, destroySession, verifyCredentials, changePassword, cookieOptions, clearCookieOptions } = require('./auth');
 const { cleanDigits, validGtin, createSku, cleanCategory, buildEbayTitle, buildDescription } = require('./helpers');
 const { lookupExternalProduct } = require('./productProvider');
 const { credentialsConfigured, envName, makeState, buildAuthUrl, encrypt, decrypt, exchangeCode, refreshToken, buildInventoryPayload, buildOfferPayload, validateForEbay, ebayFetch } = require('./ebay');
 
 const app = express();
+app.set('trust proxy', 1);
 const port = Number(process.env.PORT || 9999);;
 const storageRoot = path.resolve(process.env.STORAGE_ROOT || './storage');
 const uploadDir = path.join(storageRoot, 'uploads');
 const brandDir = path.join(storageRoot, 'branding');
+const publicDir = path.resolve('./public');
 fs.mkdirSync(uploadDir, { recursive: true });
 fs.mkdirSync(brandDir, { recursive: true });
 
@@ -34,10 +37,6 @@ app.use(helmet({ contentSecurityPolicy: false, crossOriginResourcePolicy: false 
 app.use(morgan('dev'));
 app.use(express.json({ limit: '4mb' }));
 app.use(express.urlencoded({ extended: true }));
-app.use('/uploads', express.static(uploadDir));
-app.use('/branding', express.static(brandDir));
-app.use(express.static(path.resolve('./public')));
-
 const getSettings = () => Object.fromEntries(db.prepare('SELECT key,value FROM settings').all().map(r => [r.key, r.value]));
 function inTransaction(work){ db.exec('BEGIN IMMEDIATE'); try { const result=work(); db.exec('COMMIT'); return result; } catch(error){ try{db.exec('ROLLBACK');}catch{} throw error; } }
 async function cacheExternalImage(productId,url){
@@ -52,7 +51,95 @@ async function cacheExternalImage(productId,url){
     db.prepare('INSERT INTO product_images(product_id,filename,original_name) VALUES (?,?,?)').run(productId,filename,'Externes Produktbild');
   } catch(error){ console.warn('Externes Bild konnte nicht lokal gespeichert werden:',error.message); }
 }
-app.get('/api/health', (_req, res) => { const st=getSettings(); res.json({ ok:true, ebayConfigured: credentialsConfigured(), ebayConnected:Boolean(st.ebay_refresh_token_encrypted), ebayEnvironment:envName() }); });
+
+initializeAdmin();
+
+const loginAttempts = new Map();
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const LOGIN_MAX_ATTEMPTS = 5;
+
+function loginAttemptKey(req) {
+  return String(req.ip || req.socket.remoteAddress || 'unknown');
+}
+function activeLoginAttempts(req) {
+  const key = loginAttemptKey(req);
+  const now = Date.now();
+  const attempts = (loginAttempts.get(key) || []).filter(time => now - time < LOGIN_WINDOW_MS);
+  loginAttempts.set(key, attempts);
+  return attempts;
+}
+function registerFailedLogin(req) {
+  const attempts = activeLoginAttempts(req);
+  attempts.push(Date.now());
+  loginAttempts.set(loginAttemptKey(req), attempts);
+}
+function clearFailedLogins(req) {
+  loginAttempts.delete(loginAttemptKey(req));
+}
+function requireSameOrigin(req, res, next) {
+  if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
+  const origin = req.get('origin');
+  if (!origin) return next();
+  const expected = `${req.protocol}://${req.get('host')}`;
+  if (origin !== expected) return res.status(403).json({ error: 'Anfrage aus einer fremden Quelle wurde blockiert.' });
+  next();
+}
+
+app.get('/style.css', (_req, res) => res.sendFile(path.join(publicDir, 'style.css')));
+app.get('/login.js', (_req, res) => res.sendFile(path.join(publicDir, 'login.js')));
+app.get('/login.html', (req, res) => {
+  if (getSessionUser(req)) return res.redirect('/');
+  res.sendFile(path.join(publicDir, 'login.html'));
+});
+app.get('/api/health', (_req, res) => {
+  const st = getSettings();
+  res.json({ ok: true, loginEnabled: true, ebayConfigured: credentialsConfigured(), ebayConnected: Boolean(st.ebay_refresh_token_encrypted), ebayEnvironment: envName() });
+});
+app.post('/api/auth/login', (req, res) => {
+  const attempts = activeLoginAttempts(req);
+  if (attempts.length >= LOGIN_MAX_ATTEMPTS) {
+    return res.status(429).json({ error: 'Zu viele fehlgeschlagene Anmeldeversuche. Bitte 15 Minuten warten.' });
+  }
+  const user = verifyCredentials(req.body?.email, req.body?.password);
+  if (!user) {
+    registerFailedLogin(req);
+    return res.status(401).json({ error: 'E-Mail-Adresse oder Passwort ist nicht korrekt.' });
+  }
+  clearFailedLogins(req);
+  const session = createSession(user.id);
+  res.cookie(COOKIE_NAME, session.token, cookieOptions(req));
+  res.json({ ok: true, user });
+});
+app.post('/api/auth/logout', (req, res) => {
+  destroySession(req);
+  res.clearCookie(COOKIE_NAME, clearCookieOptions(req));
+  res.json({ ok: true });
+});
+
+app.use((req, res, next) => {
+  if (req.path === '/api/ebay/callback') return next();
+  const user = getSessionUser(req);
+  if (!user) {
+    if (req.path.startsWith('/api/')) return res.status(401).json({ error: 'Bitte zuerst anmelden.' });
+    return res.redirect('/login.html');
+  }
+  req.user = user;
+  next();
+});
+app.use(requireSameOrigin);
+app.get('/api/auth/me', (req, res) => res.json({ user: req.user }));
+app.post('/api/auth/change-password', (req, res) => {
+  try {
+    changePassword(req.user.id, req.body?.currentPassword, req.body?.newPassword);
+    res.clearCookie(COOKIE_NAME, clearCookieOptions(req));
+    res.json({ ok: true, message: 'Passwort geändert. Bitte erneut anmelden.' });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+app.use('/uploads', express.static(uploadDir));
+app.use('/branding', express.static(brandDir));
+app.use(express.static(publicDir));
 app.get('/api/settings', (_req, res) => res.json(getSettings()));
 app.put('/api/settings', (req, res) => {
   const allowed = ['company_name','company_subtitle','company_address','company_phone','company_email','company_website','primary_color','pdf_footer','product_api_urls','ebay_marketplace_id','ebay_merchant_location_key','ebay_location_name','ebay_location_address','ebay_location_postal_code','ebay_location_city','ebay_location_country','ebay_fulfillment_policy_id','ebay_payment_policy_id','ebay_return_policy_id','ebay_default_category_id'];

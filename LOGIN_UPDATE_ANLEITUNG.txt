@@ -1,0 +1,100 @@
+AMA PRODUKTMANAGER – UPDATE 1: ADMINISTRATOR-LOGIN
+=================================================
+
+Dieses Update ist für den Git-Branch feature/login bestimmt.
+Es fügt einen geschützten Administrator-Login hinzu, ohne zusätzliche npm-Pakete.
+
+ENTHALTEN
+---------
+- Login-Seite mit E-Mail-Adresse und Passwort
+- sichere Passwort-Hashes mit Node.js scrypt
+- zufällige, gehashte Sitzungen in SQLite
+- HttpOnly-/SameSite-Sitzungscookie
+- automatische Weiterleitung zur Anmeldung
+- Schutz aller Produkt-, Einstellungs-, Backup-, Bild- und eBay-API-Routen
+- öffentlicher Health-Check /api/health bleibt erreichbar
+- eBay-OAuth-Callback bleibt erreichbar
+- Abmelden-Schaltfläche
+- Begrenzung fehlgeschlagener Login-Versuche
+- Passwortänderungs-API für einen späteren Einstellungsdialog
+
+WICHTIG VORHER
+--------------
+1. Prüfen, dass der aktuelle Branch feature/login ist:
+   git branch
+
+2. Laufende Anwendung mit Strg + C beenden.
+
+3. Eine Sicherheitskopie des Projektordners ist empfohlen.
+
+UPDATE EINFÜGEN
+---------------
+Den gesamten Inhalt dieses Update-Ordners in den bestehenden Projektordner kopieren:
+
+C:\AMA Autoteile\AMA-Produktmanager-ohne-Docker\ama-produktmanager
+
+Wenn Windows fragt, "Dateien im Ziel ersetzen" auswählen.
+
+NICHT löschen oder überschreiben:
+- die echte Datei .env
+- storage\ama-produkte.sqlite
+- storage\uploads
+- storage\branding
+
+LOGIN-ZUGANGSDATEN EINTRAGEN
+----------------------------
+Die vorhandene Datei .env öffnen und am Ende ergänzen:
+
+ADMIN_NAME=Administrator
+ADMIN_EMAIL=IHRE_ADMIN_EMAIL
+ADMIN_PASSWORD=IHR_SICHERES_PASSWORT
+SESSION_HOURS=12
+
+Regeln:
+- ADMIN_PASSWORD muss mindestens 12 Zeichen lang sein.
+- Das echte Passwort niemals in GitHub, Screenshots oder den Chat einfügen.
+- Keine Anführungszeichen verwenden, sofern das Passwort kein # am Anfang enthält.
+- Bei einem # im Passwort den gesamten Wert in doppelte Anführungszeichen setzen.
+
+LOKAL TESTEN
+------------
+Im Projektordner:
+
+npm start
+
+Dann öffnen:
+
+http://localhost:9999
+
+Erwartet:
+- automatische Weiterleitung zu /login.html
+- Anmeldung mit ADMIN_EMAIL und ADMIN_PASSWORD
+- nach erfolgreicher Anmeldung erscheint die Produktverwaltung
+- links unten erscheinen Benutzername, E-Mail-Adresse und "Abmelden"
+
+Zusätzlicher Test:
+
+http://localhost:9999/api/health
+
+Erwartet wird unter anderem:
+
+"ok": true
+"loginEnabled": true
+
+WICHTIG ZUR ERSTEN ANLAGE
+-------------------------
+Das Administratorkonto wird beim ersten Start in der aktuell verwendeten SQLite-Datenbank angelegt.
+Wenn später nur ADMIN_PASSWORD in .env geändert wird, ändert das nicht automatisch das bereits gespeicherte Passwort.
+Eine sichere Passwortänderungsfunktion wird als nächster kleiner Schritt in die Benutzeroberfläche eingebaut.
+
+NACH ERFOLGREICHEM TEST
+-----------------------
+Noch nicht auf main wechseln und noch nicht bei PandaStack deployen.
+Zuerst auf feature/login committen:
+
+git status
+git add src/auth.js src/db.js src/server.js public/login.html public/login.js public/index.html public/app.js public/style.css .env.example
+git commit -m "Sicheren Administrator-Login hinzugefügt"
+git push
+
+PandaStack bleibt auf main und wird dadurch nicht verändert.
