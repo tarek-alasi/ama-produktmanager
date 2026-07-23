@@ -7,7 +7,7 @@ const PDFDocument = require('pdfkit');
 const path = require('path');
 const fs = require('fs');
 const db = require('./db');
-const { COOKIE_NAME, initializeAdmin, createSession, getSessionUser, destroySession, verifyCredentials, changePassword, cookieOptions, clearCookieOptions } = require('./auth');
+const { COOKIE_NAME, initializeAdmin, createSession, getSessionUser, destroySession, verifyCredentials, changePassword, getAdminDiagnostics, cookieOptions, clearCookieOptions } = require('./auth');
 const { cleanDigits, validGtin, createSku, cleanCategory, buildEbayTitle, buildDescription } = require('./helpers');
 const { lookupExternalProduct } = require('./productProvider');
 const { credentialsConfigured, envName, makeState, buildAuthUrl, encrypt, decrypt, exchangeCode, refreshToken, buildInventoryPayload, buildOfferPayload, validateForEbay, ebayFetch } = require('./ebay');
@@ -94,6 +94,14 @@ app.get('/login.html', (req, res) => {
 app.get('/api/health', (_req, res) => {
   const st = getSettings();
   res.json({ ok: true, loginEnabled: true, ebayConfigured: credentialsConfigured(), ebayConnected: Boolean(st.ebay_refresh_token_encrypted), ebayEnvironment: envName() });
+});
+app.get('/api/login-diagnostics', (_req, res) => {
+  const enabled = ['1', 'true', 'yes', 'on'].includes(
+    String(process.env.LOGIN_DIAGNOSTICS || '').trim().toLowerCase()
+  );
+  if (!enabled) return res.status(404).json({ error: 'Nicht gefunden.' });
+  res.set('Cache-Control', 'no-store');
+  res.json(getAdminDiagnostics());
 });
 app.post('/api/auth/login', (req, res) => {
   const attempts = activeLoginAttempts(req);
