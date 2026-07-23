@@ -116,8 +116,23 @@ function initializeAdmin() {
     return;
   }
 
+  const syncOnStart = ['1', 'true', 'yes', 'on'].includes(
+    String(process.env.ADMIN_SYNC_ON_START || '').trim().toLowerCase()
+  );
+
   const existing = db.prepare('SELECT id FROM users WHERE email=?').get(email);
-  if (existing) return;
+  if (existing) {
+    if (!syncOnStart) return;
+
+    db.prepare(`
+      UPDATE users
+      SET name=?, password_hash=?, role='admin', active=1, updated_at=CURRENT_TIMESTAMP
+      WHERE id=?
+    `).run(name, hashPassword(password), existing.id);
+    db.prepare('DELETE FROM sessions WHERE user_id=?').run(existing.id);
+    console.log(`Administratorkonto synchronisiert: ${email}`);
+    return;
+  }
 
   db.prepare(`INSERT INTO users(email,name,password_hash,role,active) VALUES (?,?,?,?,1)`)
     .run(email, name, hashPassword(password), 'admin');
