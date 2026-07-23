@@ -7,6 +7,10 @@ async function api(url, options={}) {
   const r = await fetch(url, config);
   const type = r.headers.get('content-type') || '';
   const data = type.includes('application/json') ? await r.json().catch(()=>({})) : await r.text();
+  if (r.status === 401) {
+    window.location.replace('/login.html');
+    throw new Error('Ihre Sitzung ist abgelaufen. Bitte erneut anmelden.');
+  }
   if (!r.ok) throw new Error(data?.error || data || `HTTP ${r.status}`);
   return data;
 }
@@ -30,6 +34,10 @@ window.addEventListener('popstate',e=>setPage(e.state?.page||'dashboard',{push:f
 function openSidebar(){$('sidebar').classList.add('open');$('overlay').classList.add('open');}
 function closeSidebar(){$('sidebar').classList.remove('open');$('overlay').classList.remove('open');}
 $('menuBtn').onclick=openSidebar;$('sidebarClose').onclick=closeSidebar;$('overlay').onclick=closeSidebar;
+$('logoutBtn').onclick=async()=>{
+  try{await api('/api/auth/logout',{method:'POST',body:'{}'});}catch{}
+  window.location.replace('/login.html');
+};
 document.querySelectorAll('[data-page]').forEach(el=>el.onclick=()=>setPage(el.dataset.page));
 $('backBtn').onclick=()=>{if(history.state?.page==='editor'&&history.length>1)history.back();else setPage('products');};
 document.querySelectorAll('[data-action="new"]').forEach(el=>el.onclick=newProduct);$('quickNew').onclick=newProduct;
@@ -118,6 +126,17 @@ $('ebayDisconnectBtn').onclick=async()=>{if(!confirm('eBay-Verbindung wirklich t
 async function saveSettingsSilently(){const body={};['company_name','company_subtitle','company_address','company_phone','company_email','company_website','primary_color','pdf_footer','product_api_urls','ebay_marketplace_id','ebay_merchant_location_key','ebay_location_name','ebay_location_address','ebay_location_postal_code','ebay_location_city','ebay_location_country','ebay_fulfillment_policy_id','ebay_payment_policy_id','ebay_return_policy_id','ebay_default_category_id'].forEach(k=>body[k]=$(k)?.value||'');settings=await api('/api/settings',{method:'PUT',body:JSON.stringify(body)});applyBranding();}
 async function init(){
   history.replaceState({page:'dashboard'},'',location.pathname+'#dashboard');
-  try{await loadSettings();await loadCategories();await refreshEbayStatus();const h=await api('/api/health');$('health').textContent=h.ebayConnected?'Server läuft · eBay verbunden':h.ebayConfigured?'Server läuft · eBay vorbereitet':'Server läuft · eBay-Zugangsdaten fehlen';$('healthDot').classList.add('ok');await loadDashboard();}catch(e){$('health').textContent='Serverfehler';toast(e.message);}
+  try{
+    const session=await api('/api/auth/me');
+    const user=session.user||{};
+    $('currentUserName').textContent=user.name||'Administrator';
+    $('currentUserEmail').textContent=user.email||'';
+    $('userAvatar').textContent=(user.name||user.email||'A').trim().charAt(0).toUpperCase();
+    await loadSettings();await loadCategories();await refreshEbayStatus();
+    const h=await api('/api/health');
+    $('health').textContent=h.ebayConnected?'Server läuft · eBay verbunden':h.ebayConfigured?'Server läuft · eBay vorbereitet':'Server läuft · eBay-Zugangsdaten fehlen';
+    $('healthDot').classList.add('ok');
+    await loadDashboard();
+  }catch(e){$('health').textContent='Serverfehler';toast(e.message);}
 }
 init();
