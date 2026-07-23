@@ -9,16 +9,14 @@ RUN apt-get update \
        g++ \
     && rm -rf /var/lib/apt/lists/*
 
-COPY package.json package-lock.json ./
+COPY package.json ./
 
-# Stabile npm-Version verwenden und npm ci umgehen
-RUN npm install --global npm@10.8.2 \
+RUN npm config set registry https://registry.npmjs.org/ \
     && npm install --omit=dev --no-audit --no-fund
 
 COPY . .
 
 ENV NODE_ENV=production
-
 ENV PORT=9999
 
 EXPOSE 9999
