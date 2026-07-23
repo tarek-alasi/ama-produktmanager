@@ -139,6 +139,31 @@ function initializeAdmin() {
   console.log(`Administratorkonto angelegt: ${email}`);
 }
 
+function getAdminDiagnostics() {
+  const email = normalizeEmail(process.env.ADMIN_EMAIL);
+  const password = String(process.env.ADMIN_PASSWORD || '');
+  const syncOnStart = ['1', 'true', 'yes', 'on'].includes(
+    String(process.env.ADMIN_SYNC_ON_START || '').trim().toLowerCase()
+  );
+  const user = email
+    ? db.prepare('SELECT id, active, password_hash FROM users WHERE email=?').get(email)
+    : null;
+  const userCount = db.prepare('SELECT COUNT(*) AS count FROM users').get()?.count || 0;
+
+  return {
+    emailConfigured: Boolean(email),
+    passwordConfigured: Boolean(password),
+    passwordLength: password.length,
+    syncOnStart,
+    userExists: Boolean(user),
+    userActive: Boolean(user?.active),
+    storedPasswordMatchesEnvironment: Boolean(
+      user && password && verifyPassword(password, user.password_hash)
+    ),
+    userCount
+  };
+}
+
 function cookieOptions(req) {
   const forwardedProto = String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim();
   const secure = process.env.NODE_ENV === 'production' || req.secure || forwardedProto === 'https';
@@ -166,6 +191,7 @@ module.exports = {
   destroySession,
   verifyCredentials,
   changePassword,
+  getAdminDiagnostics,
   cookieOptions,
   clearCookieOptions
 };
