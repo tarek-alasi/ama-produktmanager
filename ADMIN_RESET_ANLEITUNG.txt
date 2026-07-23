@@ -1,0 +1,59 @@
+AMA PRODUKTMANAGER – UPDATE 02: ADMIN-PASSWORT EINMALIG SYNCHRONISIEREN
+============================================================================
+
+ZWECK
+-----
+Dieses kleine Update behebt den Fall, dass das Administratorkonto bereits in SQLite
+existiert und eine spätere Änderung von ADMIN_PASSWORD in PandaStack deshalb nicht
+übernommen wird.
+
+SICHERHEITSVERHALTEN
+--------------------
+Das Passwort wird nur dann aus den Umgebungsvariablen neu gesetzt, wenn zusätzlich
+ADMIN_SYNC_ON_START=true gesetzt ist. Ohne diese Variable bleibt das bestehende
+Passwort unverändert.
+
+INSTALLATION
+------------
+1. Den gesamten Inhalt dieses Update-Ordners in den Projektordner kopieren:
+
+   C:\AMA Autoteile\AMA-Produktmanager-ohne-Docker\ama-produktmanager
+
+2. Wenn Windows fragt, "Dateien im Ziel ersetzen" wählen.
+
+3. Nur diese Datei wird ersetzt:
+
+   src\auth.js
+
+4. Die echte .env-Datei und die SQLite-Datenbank NICHT löschen.
+
+LOKALER TEST
+------------
+In der lokalen .env vorübergehend ergänzen:
+
+   ADMIN_SYNC_ON_START=true
+
+Danach die Anwendung neu starten und mit ADMIN_EMAIL / ADMIN_PASSWORD anmelden.
+
+Nach erfolgreicher Anmeldung ADMIN_SYNC_ON_START wieder löschen oder auf false setzen.
+
+PANDASTACK
+----------
+Bei PandaStack unter Environment Variables vorübergehend ergänzen:
+
+   ADMIN_SYNC_ON_START=true
+
+Danach speichern und das neueste Deployment einmal neu bereitstellen.
+
+Nach erfolgreicher Anmeldung:
+
+1. ADMIN_SYNC_ON_START auf false setzen oder löschen.
+2. Speichern.
+3. Noch einmal neu bereitstellen.
+
+WICHTIG
+-------
+- ADMIN_PASSWORD darf 16 Zeichen oder länger sein.
+- Passwort nicht in GitHub, Screenshots oder den Chat einfügen.
+- Die Variable nicht dauerhaft auf true lassen, weil sonst ein später in der App
+  geändertes Passwort beim nächsten Start wieder durch ADMIN_PASSWORD ersetzt wird.
