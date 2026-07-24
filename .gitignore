@@ -1,0 +1,14 @@
+node_modules/
+.env
+npm-debug.log*
+
+storage/*.sqlite
+storage/*.sqlite-*
+storage/uploads/*
+!storage/uploads/.gitkeep
+storage/branding/*
+!storage/branding/.gitkeep
+
+backups/
+
+.env.alt

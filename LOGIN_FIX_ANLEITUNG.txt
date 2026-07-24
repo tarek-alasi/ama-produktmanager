@@ -1,0 +1,58 @@
+AMA PRODUKTMANAGER – BEREINIGTE LOGIN-VERSION
+==============================================
+
+Diese Version wurde aus dem aktuellen GitHub-Stand neu aufgebaut.
+Temporäre öffentliche Diagnose-Routen und Diagnose-Skripte wurden entfernt.
+
+WICHTIGE ÄNDERUNGEN
+-------------------
+- Passwörter werden vor dem Hashen und Prüfen einheitlich normalisiert.
+- Versehentliche Leerzeichen am Anfang oder Ende werden ignoriert.
+- Unterschiedliche Unicode-Darstellungen werden vereinheitlicht.
+- Der Login-Endpunkt prüft leere Eingaben sauber und wird nicht zwischengespeichert.
+- /api/health zeigt loginEnabled nur an, wenn Admin-E-Mail und Passwort vorhanden sind.
+
+LOKALE EINRICHTUNG
+------------------
+1. .env.example nach .env kopieren.
+2. In .env mindestens eintragen:
+
+   PORT=3001
+   NODE_ENV=development
+   ADMIN_NAME=Administrator
+   ADMIN_EMAIL=admin@amaautoteile.de
+   ADMIN_PASSWORD=EIN_NEUES_SICHERES_PASSWORT
+   SESSION_HOURS=12
+   ADMIN_SYNC_ON_START=false
+
+3. Für den ersten Test ein Passwort aus normalen Buchstaben, Zahlen und ! verwenden.
+   Keine Leerzeichen am Anfang oder Ende verwenden.
+4. npm install
+5. npm start
+6. http://localhost:3001 öffnen und anmelden.
+
+BESTEHENDE DATENBANK / PASSWORT ZURÜCKSETZEN
+--------------------------------------------
+Wenn die Datenbank bereits ein Administratorkonto enthält:
+
+1. ADMIN_SYNC_ON_START=true setzen.
+2. Anwendung einmal neu starten.
+3. Erfolgreich anmelden.
+4. ADMIN_SYNC_ON_START=false setzen.
+5. Anwendung erneut neu starten.
+
+PANDASTACK
+----------
+Für einen vollständig neuen PandaStack-Test zunächst nur diese Variablen setzen:
+
+NODE_ENV=production
+APP_NAME=AMA Produktmanager
+DATABASE_PATH=./storage/ama-produkte.sqlite
+ADMIN_NAME=Administrator
+ADMIN_EMAIL=admin@amaautoteile.de
+ADMIN_PASSWORD=EIN_NEUES_SICHERES_PASSWORT
+SESSION_HOURS=12
+ADMIN_SYNC_ON_START=false
+
+Nach einem erfolgreichen Test kann eBay wieder ergänzt werden.
+Für echte Daten muss vor der produktiven Nutzung ein permanentes Volume eingerichtet werden.

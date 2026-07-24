@@ -1,0 +1,11 @@
+node_modules
+.env
+.git
+.gitignore
+npm-debug.log*
+
+storage/*.sqlite
+storage/*.sqlite-*
+storage/uploads/*
+storage/branding/*
+backups/

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Anmeldung – AMA Produktmanager</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="login-page">
+  <main class="login-shell">
+    <section class="login-card" aria-labelledby="loginTitle">
+      <div class="login-brand">
+        <div class="login-mark">AMA</div>
+        <div>
+          <strong>AMA Produktmanager</strong>
+          <span>Geschützter Unternehmenszugang</span>
+        </div>
+      </div>
+
+      <div class="login-heading">
+        <p class="eyebrow">ANMELDUNG</p>
+        <h1 id="loginTitle">Willkommen zurück</h1>
+        <p>Melden Sie sich mit Ihrem Administratorkonto an.</p>
+      </div>
+
+      <form id="loginForm" class="login-form" novalidate>
+        <label for="email">E-Mail-Adresse
+          <input id="email" name="email" type="email" autocomplete="username" required autofocus>
+        </label>
+        <label for="password">Passwort
+          <div class="password-field">
+            <input id="password" name="password" type="password" autocomplete="current-password" required>
+            <button type="button" id="togglePassword" class="password-toggle" aria-label="Passwort anzeigen">Anzeigen</button>
+          </div>
+        </label>
+        <p id="loginError" class="login-error" role="alert" hidden></p>
+        <button id="loginButton" class="primary-btn login-submit" type="submit">Anmelden</button>
+      </form>
+
+      <p class="login-note">Der Zugriff ist ausschließlich für autorisierte Benutzer bestimmt.</p>
+    </section>
+  </main>
+  <script src="/login.js" defer></script>
+</body>
+</html>
