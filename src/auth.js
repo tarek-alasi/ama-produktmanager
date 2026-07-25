@@ -71,47 +71,47 @@ function sessionDurationMs() {
   return sessionHours() * 60 * 60 * 1000;
 }
 
-function createSession(userId) {
+async function createSession(userId) {
   const token = crypto.randomBytes(32).toString('base64url');
   const expiresAt = Date.now() + sessionDurationMs();
-  db.prepare('DELETE FROM sessions WHERE expires_at <= ?').run(Date.now());
-  db.prepare('INSERT INTO sessions(token_hash,user_id,expires_at) VALUES (?,?,?)')
+  await db.prepare('DELETE FROM sessions WHERE expires_at <= ?').run(Date.now());
+  await db.prepare('INSERT INTO sessions(token_hash,user_id,expires_at) VALUES (?,?,?)')
     .run(tokenHash(token), userId, expiresAt);
   return { token, expiresAt };
 }
 
-function getSessionUser(req) {
+async function getSessionUser(req) {
   const token = parseCookies(req)[COOKIE_NAME];
   if (!token) return null;
-  const row = db.prepare(`
+  const row = await db.prepare(`
     SELECT u.id, u.email, u.name, u.role, s.expires_at
     FROM sessions s
     JOIN users u ON u.id=s.user_id
     WHERE s.token_hash=? AND s.expires_at>? AND u.active=1
   `).get(tokenHash(token), Date.now());
   if (!row) return null;
-  db.prepare('UPDATE sessions SET last_seen_at=CURRENT_TIMESTAMP WHERE token_hash=?')
+  await db.prepare('UPDATE sessions SET last_seen_at=CURRENT_TIMESTAMP WHERE token_hash=?')
     .run(tokenHash(token));
   return row;
 }
 
-function destroySession(req) {
+async function destroySession(req) {
   const token = parseCookies(req)[COOKIE_NAME];
-  if (token) db.prepare('DELETE FROM sessions WHERE token_hash=?').run(tokenHash(token));
+  if (token) await db.prepare('DELETE FROM sessions WHERE token_hash=?').run(tokenHash(token));
 }
 
-function verifyCredentials(email, password) {
+async function verifyCredentials(email, password) {
   const normalizedEmail = normalizeEmail(email);
   const normalizedPassword = normalizePassword(password);
   if (!normalizedEmail || !normalizedPassword) return null;
 
-  const user = db.prepare('SELECT * FROM users WHERE email=? AND active=1').get(normalizedEmail);
+  const user = await db.prepare('SELECT * FROM users WHERE email=? AND active=1').get(normalizedEmail);
   if (!user || !verifyPassword(normalizedPassword, user.password_hash)) return null;
   return { id: user.id, email: user.email, name: user.name, role: user.role };
 }
 
-function changePassword(userId, currentPassword, newPassword) {
-  const user = db.prepare('SELECT * FROM users WHERE id=? AND active=1').get(userId);
+async function changePassword(userId, currentPassword, newPassword) {
+  const user = await db.prepare('SELECT * FROM users WHERE id=? AND active=1').get(userId);
   if (!user || !verifyPassword(currentPassword, user.password_hash)) {
     throw new Error('Das aktuelle Passwort ist nicht korrekt.');
   }
@@ -119,12 +119,12 @@ function changePassword(userId, currentPassword, newPassword) {
   if (normalizedNewPassword.length < 12) {
     throw new Error('Das neue Passwort muss mindestens 12 Zeichen lang sein.');
   }
-  db.prepare('UPDATE users SET password_hash=?, updated_at=CURRENT_TIMESTAMP WHERE id=?')
+  await db.prepare('UPDATE users SET password_hash=?, updated_at=CURRENT_TIMESTAMP WHERE id=?')
     .run(hashPassword(normalizedNewPassword), userId);
-  db.prepare('DELETE FROM sessions WHERE user_id=?').run(userId);
+  await db.prepare('DELETE FROM sessions WHERE user_id=?').run(userId);
 }
 
-function initializeAdmin() {
+async function initializeAdmin() {
   const email = normalizeEmail(process.env.ADMIN_EMAIL);
   const password = normalizePassword(process.env.ADMIN_PASSWORD);
   const name = String(process.env.ADMIN_NAME || 'Administrator').trim() || 'Administrator';
@@ -141,24 +141,24 @@ function initializeAdmin() {
     return;
   }
 
-  const existing = db.prepare('SELECT id FROM users WHERE email=?').get(email);
+  const existing = await db.prepare('SELECT id FROM users WHERE email=?').get(email);
   if (existing) {
     if (!syncOnStart) {
       console.log(`Administratorkonto vorhanden: ${email}`);
       return;
     }
 
-    db.prepare(`
+    await db.prepare(`
       UPDATE users
       SET name=?, password_hash=?, role='admin', active=1, updated_at=CURRENT_TIMESTAMP
       WHERE id=?
     `).run(name, hashPassword(password), existing.id);
-    db.prepare('DELETE FROM sessions WHERE user_id=?').run(existing.id);
+    await db.prepare('DELETE FROM sessions WHERE user_id=?').run(existing.id);
     console.log(`Administratorkonto synchronisiert: ${email}`);
     return;
   }
 
-  db.prepare('INSERT INTO users(email,name,password_hash,role,active) VALUES (?,?,?,?,1)')
+  await db.prepare('INSERT INTO users(email,name,password_hash,role,active) VALUES (?,?,?,?,1)')
     .run(email, name, hashPassword(password), 'admin');
   console.log(`Administratorkonto angelegt: ${email}`);
 }
