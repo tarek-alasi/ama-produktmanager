@@ -35,8 +35,6 @@ const backupUpload = multer({ storage: multer.memoryStorage(), limits: { fileSiz
 
 app.use(helmet({ contentSecurityPolicy: false, crossOriginResourcePolicy: false }));
 app.use(morgan('dev'));
-app.use(express.json({ limit: '4mb' }));
-app.use(express.urlencoded({ extended: true }));
 const getSettings = () => Object.fromEntries(db.prepare('SELECT key,value FROM settings').all().map(r => [r.key, r.value]));
 function inTransaction(work){ db.exec('BEGIN IMMEDIATE'); try { const result=work(); db.exec('COMMIT'); return result; } catch(error){ try{db.exec('ROLLBACK');}catch{} throw error; } }
 async function cacheExternalImage(productId,url){
@@ -86,16 +84,25 @@ function requireSameOrigin(req, res, next) {
 }
 
 app.get('/style.css', (_req, res) => res.sendFile(path.join(publicDir, 'style.css')));
-app.get('/login.js', (_req, res) => res.sendFile(path.join(publicDir, 'login.js')));
+app.get('/login.js', (_req, res) => {
+  res.set('Cache-Control', 'no-store, max-age=0');
+  res.sendFile(path.join(publicDir, 'login.js'));
+});
 app.get('/login.html', (req, res) => {
   if (getSessionUser(req)) return res.redirect('/');
+  res.set('Cache-Control', 'no-store, max-age=0');
   res.sendFile(path.join(publicDir, 'login.html'));
 });
 app.get('/api/health', (_req, res) => {
   const st = getSettings();
   res.json({ ok: true, loginEnabled: Boolean(process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD), ebayConfigured: credentialsConfigured(), ebayConnected: Boolean(st.ebay_refresh_token_encrypted), ebayEnvironment: envName() });
 });
-app.post('/api/auth/login', requireSameOrigin, (req, res) => {
+app.post(
+  '/api/auth/login',
+  express.json({ limit: '32kb' }),
+  express.urlencoded({ extended: false, limit: '32kb' }),
+  requireSameOrigin,
+  (req, res) => {
   res.set('Cache-Control', 'no-store');
   const attempts = activeLoginAttempts(req);
   if (attempts.length >= LOGIN_MAX_ATTEMPTS) {
@@ -117,12 +124,17 @@ app.post('/api/auth/login', requireSameOrigin, (req, res) => {
   const session = createSession(user.id);
   res.cookie(COOKIE_NAME, session.token, cookieOptions(req));
   res.json({ ok: true, user });
-});
+  }
+);
 app.post('/api/auth/logout', (req, res) => {
   destroySession(req);
   res.clearCookie(COOKIE_NAME, clearCookieOptions(req));
   res.json({ ok: true });
 });
+
+// Alle übrigen API-Routen unterstützen weiterhin JSON und HTML-Formulardaten.
+app.use(express.json({ limit: '4mb' }));
+app.use(express.urlencoded({ extended: true }));
 
 app.use((req, res, next) => {
   if (req.path === '/api/ebay/callback') return next();
