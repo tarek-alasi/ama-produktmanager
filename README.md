@@ -1,49 +1,47 @@
-# AMA Produktmanager – Version 4
+# AMA Produktmanager – Version 6
 
-Diese Version behebt die gemeldeten Probleme und erweitert die Anwendung.
+Die Anwendung unterstützt jetzt zwei Datenbankarten:
 
-## Neu und korrigiert
+- **SQLite** für den lokalen Betrieb ohne zusätzliche Einrichtung.
+- **PostgreSQL** für PandaStack und dauerhafte Daten.
 
-- Kategorien werden auf ein oder zwei verständliche Begriffe bereinigt.
-- Produkte können direkt in der Produktdatenbank mit Bestätigung gelöscht werden.
-- Der Zurück-Button nutzt die interne Seitenhistorie.
-- Externe Produktbilder werden beim Speichern lokal übernommen und bleiben sichtbar.
-- Kamera-Auswahl wurde für Smartphone-Rückkameras korrigiert.
-- Einstellungen werden ohne `db.transaction`-Fehler gespeichert.
-- Firmenname, Untertitel, Farbe und Logo werden in der gesamten Oberfläche aktualisiert.
-- Vollständige JSON-Sicherung mit Produkten, Einstellungen, Bildern und Logo.
-- Backup kann in den Einstellungen wiederhergestellt werden.
-- Mehrere Produkt-API-URLs können in den Einstellungen untereinander eingetragen werden.
-- CSV-Import, PDF, Druck und vorbereitete eBay-Anbindung bleiben enthalten.
+Sobald `DATABASE_URL` vorhanden ist, verwendet die Anwendung automatisch PostgreSQL. Ohne `DATABASE_URL` bleibt sie bei SQLite.
 
-## Installation
+## Neu in Version 6
 
-1. Alte Anwendung mit `Strg + C` stoppen.
-2. `.env` und den kompletten Ordner `storage` sichern.
-3. Neue Version entpacken.
-4. Alte `.env` und `storage` in den neuen Ordner kopieren.
-5. Im Projektordner ausführen:
+- PostgreSQL-Unterstützung über einen Connection Pool.
+- Automatische Erstellung und Aktualisierung der Datenbanktabellen.
+- Weiterhin vollständige SQLite-Unterstützung für lokale Tests.
+- Benutzer, Sitzungen, Produkte, Einstellungen und eBay-Tokens liegen in PostgreSQL.
+- Produktbilder und Firmenlogo werden zusätzlich in der Datenbank gespeichert und über die bisherigen URLs ausgeliefert.
+- `/api/health` zeigt mit `database` den aktiven Datenbanktyp an.
+- Backup und Wiederherstellung funktionieren mit beiden Datenbankarten.
+
+## Lokaler Betrieb mit SQLite
 
 ```powershell
-npm config set registry https://registry.npmjs.org/
 npm install
+npm run test:auth
+npm run test:db
 npm start
 ```
 
-Danach `http://localhost:3001` öffnen. Für die Handykamera weiterhin eine HTTPS-Adresse über Cloudflare Tunnel verwenden.
+Danach `http://localhost:3001` öffnen.
 
-## eBay-Assistent (Version 5)
+## PostgreSQL
 
-Unter **Einstellungen → eBay-Verbindung** stehen jetzt zusätzliche Schaltflächen bereit:
+Für PostgreSQL wird eine gültige Variable benötigt:
 
-1. Business Policies aktivieren
-2. Standardrichtlinien erstellen
-3. Richtlinien abrufen
-4. Lagerstandort erstellen
+```env
+DATABASE_URL=postgresql://BENUTZER:PASSWORT@HOST:5432/DATENBANK
+```
 
-Die Test-Standardrichtlinien verwenden DHL Paket mit 6,99 EUR Versand, zwei Tagen Bearbeitungszeit und 30 Tagen Rückgabe. Prüfen und ändern Sie diese Werte vor einem echten Production-Einsatz.
+Bei einer mit dem PandaStack-Projekt verknüpften Datenbank wird `DATABASE_URL` automatisch gesetzt. Die Datenbankverbindung muss über TLS erfolgen.
 
+## Datensicherung
 
-## PandaStack / Docker
+Vor dem Wechsel von SQLite zu PostgreSQL in der Anwendung unter **Einstellungen** eine JSON-Sicherung herunterladen. Nach dem PostgreSQL-Deployment kann diese Sicherung wieder importiert werden. eBay-OAuth-Tokens werden aus Sicherheitsgründen nicht in die Sicherung aufgenommen; das eBay-Konto muss danach neu verbunden werden.
 
-Für PandaStack ist eine Dockerfile enthalten. Details stehen in `PANDASTACK-ANLEITUNG.md`.
+## Wichtiger Hinweis zu Bildern
+
+Bilder werden für die Dauerhaftigkeit als Binärdaten in PostgreSQL gespeichert. Das ist für einen einzelnen Produktmanager praktisch, verbraucht aber Datenbankspeicher. Für sehr große Bildbestände sollte später ein Object Storage verwendet werden.

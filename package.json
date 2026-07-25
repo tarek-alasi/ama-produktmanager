@@ -1,13 +1,14 @@
 {
   "name": "ama-produktmanager",
-  "version": "5.1.0",
+  "version": "6.0.0",
   "private": true,
-  "description": "AMA Produktmanager mit Docker-Deployment, SQLite, Produktdatenquellen, PDF und eBay-Anbindung",
+  "description": "AMA Produktmanager mit SQLite/PostgreSQL, persistenten Produktdaten, PDF und eBay-Anbindung",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test:auth": "node tests/auth-smoke.js"
+    "test:auth": "node tests/auth-smoke.js",
+    "test:db": "node tests/db-smoke.js"
   },
   "engines": {
     "node": ">=22.5 <25"
@@ -18,6 +19,8 @@
     "helmet": "^8.0.0",
     "morgan": "^1.10.0",
     "multer": "^2.0.2",
-    "pdfkit": "^0.15.2"
+    "pdfkit": "^0.15.2",
+    "express-async-errors": "^3.1.1",
+    "pg": "^8.16.3"
   }
 }
