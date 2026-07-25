@@ -20,10 +20,19 @@ form.addEventListener('submit', async event => {
   button.textContent = 'Anmeldung läuft …';
 
   try {
+    const payload = new URLSearchParams();
+    payload.set('email', email.value.trim());
+    payload.set('password', password.value);
+
     const response = await fetch('/api/auth/login', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email.value.trim(), password: password.value })
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+        'Accept': 'application/json'
+      },
+      credentials: 'same-origin',
+      cache: 'no-store',
+      body: payload.toString()
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || 'Anmeldung fehlgeschlagen.');
